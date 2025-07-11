@@ -10,7 +10,7 @@ seaborn
 plotly
 
 # PDF generation
-fpdf
+fpdf2
 
 # Model saving/loading
 joblib
