@@ -1,0 +1,16 @@
+streamlit
+scikit-learn
+pandas
+numpy
+
+# Optional, useful if your app performs visualization
+matplotlib
+seaborn
+plotly
+
+# Optional, if you're serializing models
+joblib
+
+# Optional, for additional functionality
+python-dotenv  # to manage environment variables
+requests       # if fetching data from APIs
