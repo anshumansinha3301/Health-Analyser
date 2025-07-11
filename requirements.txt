@@ -1,16 +1,26 @@
+# Core app dependencies
 streamlit
 scikit-learn
 pandas
 numpy
 
-# Optional, useful if your app performs visualization
+# Visualization libraries
 matplotlib
 seaborn
 plotly
 
-# Optional, if you're serializing models
+# PDF generation
+fpdf
+
+# Model saving/loading
 joblib
 
-# Optional, for additional functionality
-python-dotenv  # to manage environment variables
-requests       # if fetching data from APIs
+# Working with environment variables and API requests (optional but useful)
+python-dotenv
+requests
+
+# Optional: Text processing (if you use NLP)
+nltk
+
+# Optional: To suppress convergence warnings or similar messages
+warnings
