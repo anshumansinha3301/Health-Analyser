@@ -54,3 +54,31 @@ Below are the dependencies used along with version and description:
 4. Run the Streamlit app:
    streamlit run health.py
 
+
+# Core packages
+streamlit
+scikit-learn
+pandas
+numpy
+
+# Optional (for plotting and visualization)
+matplotlib
+seaborn
+plotly
+
+# Optional (if using model persistence)
+joblib
+
+# Optional (if using text-based ML)
+nltk
+
+# Optional (if you do web scraping or requests)
+requests
+
+# Optional (if using image processing or computer vision)
+opencv-python
+
+# If you're using a specific Python version (optional)
+# python_version == "3.10"
+
+
