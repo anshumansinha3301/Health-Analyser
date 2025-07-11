@@ -1,26 +1,25 @@
-# Core app dependencies
+# Streamlit app framework
 streamlit
+
+# Machine learning & model handling
 scikit-learn
+joblib
+
+# Data manipulation
 pandas
 numpy
 
-# Visualization libraries
+# Visualization
 matplotlib
 seaborn
 plotly
 
-# PDF generation
+# PDF generation (modern version that works with `from fpdf import FPDF`)
 fpdf2
 
-# Model saving/loading
-joblib
-
-# Working with environment variables and API requests (optional but useful)
-python-dotenv
+# API calls & environment variables
 requests
+python-dotenv
 
-# Optional: Text processing (if you use NLP)
+# Natural language processing (if used)
 nltk
-
-# Optional: To suppress convergence warnings or similar messages
-warnings
