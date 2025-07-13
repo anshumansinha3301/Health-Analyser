@@ -9,7 +9,7 @@ This project is a **Health Risk Screening Tool** built with **Streamlit**. It us
 
 ## 🌐 Live Demo
 
-🔗 **[Click here to try the live app](https://jjd5gxtb-8501.inc1.devtunnels.ms/)**
+🔗 **[Click here to try the live app](https://healthanalyser.streamlit.app/)**
 
 ---
 
