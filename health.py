@@ -9,12 +9,12 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.exceptions import ConvergenceWarning
 import matplotlib.pyplot as plt
 import seaborn as sns
-from fpdf import FPDF
-from io import BytesIO
+# Removed FPDF and BytesIO imports
 from datetime import datetime
 import warnings
 import requests
 
+# --- CONFIGURATION ---
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -25,6 +25,7 @@ st.set_page_config(
     layout="wide"
 )
 
+# --- CUSTOM CSS ---
 st.markdown("""
     <style>
     .main {
@@ -113,7 +114,7 @@ else:
         st.markdown(f"**Phone:** {st.session_state.phone}")
         st.divider()
         st.info("💡 **Tip:** Adjust the sliders on the right to see how different factors affect your health risk.")
-        st.caption("Built with ❤️ by Anshuman Sinha")
+        st.caption("Code by Anshuman Sinha")
 
     # --- MAIN CONTENT ---
     st.markdown("<h2 style='text-align: center;'>🩺 AI Health Risk Predictor</h2>", unsafe_allow_html=True)
@@ -223,7 +224,6 @@ else:
         
         if prediction == 1:
             st.error(f"⚠️ **High Risk Detected ({risk_prob*100:.1f}%)**")
-            # Added 'color: #333333' to force dark text
             st.markdown("""
                 <div style="background-color: #ffe6e6; color: #333333; padding: 10px; border-radius: 5px;">
                     <strong>Advice:</strong> Your input metrics suggest an elevated health risk. 
@@ -232,70 +232,9 @@ else:
             """, unsafe_allow_html=True)
         else:
             st.success(f"✅ **Low Risk Detected ({risk_prob*100:.1f}%)**")
-            # Added 'color: #333333' to force dark text
             st.markdown("""
                 <div style="background-color: #e6fffa; color: #333333; padding: 10px; border-radius: 5px;">
                     <strong>Great Job:</strong> Your vitals appear to be within a healthy range. 
                     Continue maintaining a balanced diet and active lifestyle!
                 </div>
             """, unsafe_allow_html=True)
-
-    # --- REPORT GENERATION ---
-    st.markdown("### 📄 Actions")
-    
-    def generate_pdf():
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(200, 10, txt="Medical Health Risk Report", ln=True, align="C")
-        pdf.set_font("Arial", size=10)
-        pdf.cell(200, 10, txt="Confidential - Automated Report", ln=True, align="C")
-        pdf.line(10, 30, 200, 30)
-        
-        pdf.set_font("Arial", size=12)
-        pdf.ln(20)
-        
-        pdf.cell(200, 10, txt=f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
-        pdf.cell(200, 10, txt=f"Patient Name: {st.session_state.name}", ln=True)
-        pdf.cell(200, 10, txt=f"Patient Age: {st.session_state.reg_age}", ln=True)
-        pdf.ln(10)
-        
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(200, 10, txt="Clinical Data:", ln=True)
-        pdf.set_font("Arial", size=12)
-        
-        # Table-like structure
-        col_width = 90
-        row_height = 8
-        
-        for col in input_features.columns:
-            val = input_features.iloc[0][col]
-            pdf.cell(col_width, row_height, txt=f"{col}", border=1)
-            pdf.cell(col_width, row_height, txt=f"{val}", border=1, ln=True)
-
-        pdf.ln(10)
-        pdf.set_font("Arial", 'B', 14)
-        status = "HIGH RISK" if prediction == 1 else "LOW RISK"
-        if prediction == 1:
-            pdf.set_text_color(255, 0, 0)
-        else:
-            pdf.set_text_color(0, 128, 0)
-            
-        pdf.cell(200, 10, txt=f"Prediction: {status} ({risk_prob * 100:.2f}%)", ln=True)
-        
-        # FIX FOR PDF DOWNLOAD ERROR
-        # Convert to latin-1 string and then to bytes for streamlit download
-        pdf_content = pdf.output(dest='S').encode('latin-1')
-        buffer = BytesIO(pdf_content)
-        return buffer
-
-    # Center the download button
-    _, btn_col, _ = st.columns([1, 2, 1])
-    with btn_col:
-        pdf_file = generate_pdf()
-        st.download_button(
-            label="📥 Download Official Health Report (PDF)",
-            data=pdf_file,
-            file_name=f"Health_Report_{st.session_state.name.replace(' ', '_')}.pdf",
-            mime="application/pdf",
-        )
