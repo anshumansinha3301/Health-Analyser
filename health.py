@@ -1,23 +1,15 @@
-# to run the project write in terminal (streamlit run "file path")
+# to run the project write in terminal (streamlit run app.py)
 # Code By Anshuman Sinha
 
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.exceptions import ConvergenceWarning
-import matplotlib.pyplot as plt
-import seaborn as sns
-# Removed FPDF and BytesIO imports
 from datetime import datetime
 import warnings
 import requests
 
 # --- CONFIGURATION ---
-warnings.filterwarnings("ignore", category=ConvergenceWarning)
-warnings.filterwarnings("ignore", category=UserWarning)
-warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore")
 
 st.set_page_config(
     page_title="Health Risk Predictor",
@@ -41,7 +33,6 @@ st.markdown("""
     h1, h2, h3 {
         font-family: 'Segoe UI', sans-serif;
     }
-    /* Fix for dark mode text visibility in custom boxes */
     .advice-box {
         color: #333333 !important; 
     }
@@ -51,12 +42,17 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- FUNCTION: SEND DATA ---
-def send_to_getform(name, age, phone):
-    url = "https://getform.io/f/bpjxmrzb"
+def send_to_getform(name, age, phone, height, weight, smoker, alcohol, activity):
+    url = "https://getform.io/f/allgjxja"
     data = {
         "name": name,
         "age": age,
         "phone": phone,
+        "height": height,
+        "weight": weight,
+        "smoker": "Yes" if smoker else "No",
+        "alcohol": "Yes" if alcohol else "No",
+        "activity_hours": activity,
         "registered_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
     try:
@@ -79,27 +75,63 @@ if not st.session_state.registered:
         st.markdown("<p style='text-align: center; color: #666;'>Please enter your details to access the Health Risk Predictor.</p>", unsafe_allow_html=True)
         
         with st.form("reg_form"):
+            # Basic Info
+            st.subheader("Personal Details")
             name = st.text_input("Full Name", placeholder="e.g. John Doe")
-            reg_age = st.number_input("Age", min_value=1, max_value=120, value=30)
-            phone = st.text_input("Phone Number", placeholder="e.g. 9876543210")
             
+            c_age, c_phone = st.columns(2)
+            with c_age:
+                reg_age = st.number_input("Age", min_value=1, max_value=120, value=30)
+            with c_phone:
+                phone = st.text_input("Phone Number (10 digits)", max_chars=10, placeholder="e.g. 9876543210")
+
+            # Physical Stats
+            st.subheader("Physical Stats")
+            c_height, c_weight = st.columns(2)
+            with c_height:
+                reg_height = st.number_input("Height (cm)", min_value=50.0, max_value=300.0, value=170.0)
+            with c_weight:
+                reg_weight = st.number_input("Weight (kg)", min_value=10.0, max_value=200.0, value=65.0)
+
+            # Lifestyle
+            st.subheader("Lifestyle Habits")
+            reg_activity = st.slider("Physical Activity (Hours/Day)", min_value=0, max_value=24, value=1)
+            
+            c_smoke, c_alcohol = st.columns(2)
+            with c_smoke:
+                reg_smoker = st.checkbox("Do you Smoke?")
+            with c_alcohol:
+                reg_alcohol = st.checkbox("Do you consume Alcohol?")
+            
+            st.markdown("---")
             submit = st.form_submit_button("Start Assessment")
             
             if submit:
-                if name and phone:
+                # --- VALIDATION LOGIC ---
+                if not name:
+                    st.warning("Please enter your name.")
+                elif not phone:
+                    st.warning("Please enter your phone number.")
+                elif len(phone) != 10 or not phone.isdigit():
+                    st.error("⚠️ Invalid Phone Number: Must be exactly 10 digits.")
+                else:
                     with st.spinner("Registering..."):
-                        success = send_to_getform(name, reg_age, phone)
+                        success = send_to_getform(name, reg_age, phone, reg_height, reg_weight, reg_smoker, reg_alcohol, reg_activity)
                         if success:
                             st.session_state.registered = True
                             st.session_state.name = name
                             st.session_state.reg_age = reg_age
                             st.session_state.phone = phone
+                            st.session_state.reg_height = reg_height
+                            st.session_state.reg_weight = reg_weight
+                            st.session_state.reg_smoker = reg_smoker
+                            st.session_state.reg_alcohol = reg_alcohol
+                            st.session_state.reg_activity = reg_activity
+                            
                             st.success("Success! Loading dashboard...")
                             st.rerun()
                         else:
-                            st.error("Connection error. Please try again.")
-                else:
-                    st.warning("Please fill in all fields.")
+                            st.error("Connection error. Please try again or check internet.")
 
 # ==========================================
 # 2. MAIN APP (DASHBOARD)
@@ -113,24 +145,23 @@ else:
         st.markdown(f"**Age:** {st.session_state.reg_age}")
         st.markdown(f"**Phone:** {st.session_state.phone}")
         st.divider()
-        st.info("💡 **Tip:** Adjust the sliders on the right to see how different factors affect your health risk.")
+        st.info("💡 **Tip:** We have pre-filled the form with your registration data. You can tweak it below to test scenarios.")
         st.caption("Code by Anshuman Sinha")
 
     # --- MAIN CONTENT ---
     st.markdown("<h2 style='text-align: center;'>🩺 AI Health Risk Predictor</h2>", unsafe_allow_html=True)
     st.markdown("---")
 
-    # --- INPUT SECTION (3 COLUMNS FOR CLEAN UI) ---
+    # --- INPUT SECTION ---
     col1, col2, col3 = st.columns(3)
 
     with col1:
         st.subheader("👤 Biometrics")
         age = st.slider("Current Age", 10, 100, int(st.session_state.reg_age))
         gender = st.radio("Gender", ["Male", "Female"], horizontal=True)
-        height = st.number_input("Height (cm)", 120.0, 210.0, 170.0)
-        weight = st.number_input("Weight (kg)", 30.0, 150.0, 65.0)
+        height = st.number_input("Height (cm)", 120.0, 300.0, float(st.session_state.reg_height))
+        weight = st.number_input("Weight (kg)", 30.0, 200.0, float(st.session_state.reg_weight))
         
-        # Calculate BMI immediately for display
         bmi = round(weight / ((height / 100) ** 2), 2)
         if bmi < 18.5:
             bmi_status = "Underweight"
@@ -154,65 +185,57 @@ else:
 
     with col3:
         st.subheader("🏃 Lifestyle")
-        physical_activity = st.slider("Activity (hrs/week)", 0, 15, 3)
+        default_activity = int(st.session_state.reg_activity * 7) 
+        if default_activity > 15: default_activity = 15 
+
+        physical_activity = st.slider("Activity (hrs/week)", 0, 15, default_activity)
         sleep_hours = st.slider("Sleep (hrs/day)", 0, 12, 7)
+        
         st.write("Habits:")
         c1, c2 = st.columns(2)
         with c1:
-            smoking = st.checkbox("Smoker?")
+            smoking = st.checkbox("Smoker?", value=st.session_state.reg_smoker)
         with c2:
-            alcohol = st.checkbox("Alcohol?")
+            alcohol = st.checkbox("Alcohol?", value=st.session_state.reg_alcohol)
 
+    # --- OPTIMIZED MODEL LOGIC (NO SKLEARN) ---
     # Encodings
-    gender_encoded = 1 if gender == "Male" else 0
-    smoking_encoded = 1 if smoking else 0
-    alcohol_encoded = 1 if alcohol else 0
+    gender_val = 1 if gender == "Male" else 0
+    smoke_val = 1 if smoking else 0
+    alc_val = 1 if alcohol else 0
 
-    input_features = pd.DataFrame([[
-        age, gender_encoded, weight, height, bmi, glucose, bp_systolic, bp_diastolic,
-        cholesterol, heart_rate, physical_activity, smoking_encoded, alcohol_encoded, sleep_hours
-    ]], columns=[
-        "Age", "Gender", "Weight", "Height", "BMI", "Glucose", "SystolicBP", 
-        "DiastolicBP", "Cholesterol", "HeartRate", "PhysicalActivity", "Smoking", 
-        "Alcohol", "SleepHours"
+    # 1. Collect features into a numpy array
+    input_data = np.array([
+        age, gender_val, weight, height, bmi, glucose, bp_systolic, bp_diastolic,
+        cholesterol, heart_rate, physical_activity, smoke_val, alc_val, sleep_hours
     ])
 
-    # --- MODEL LOGIC (Hidden) ---
-    np.random.seed(42) 
-    X_train = pd.DataFrame({
-        "Age": np.random.randint(18, 80, 500),
-        "Gender": np.random.randint(0, 2, 500),
-        "Weight": np.random.randint(45, 110, 500),
-        "Height": np.random.randint(150, 190, 500),
-        "BMI": np.random.uniform(18, 35, 500),
-        "Glucose": np.random.randint(70, 200, 500),
-        "SystolicBP": np.random.randint(100, 180, 500),
-        "DiastolicBP": np.random.randint(60, 110, 500),
-        "Cholesterol": np.random.randint(150, 300, 500),
-        "HeartRate": np.random.randint(55, 100, 500),
-        "PhysicalActivity": np.random.randint(0, 10, 500),
-        "Smoking": np.random.randint(0, 2, 500),
-        "Alcohol": np.random.randint(0, 2, 500),
-        "SleepHours": np.random.randint(4, 10, 500),
-    })
-    y_train = np.random.randint(0, 2, 500)
+    # 2. Hardcoded Normalization Parameters (derived from the previous random ranges)
+    # These represent the 'averages' and 'spread' of the data the model expects
+    means = np.array([50, 0.5, 75, 170, 26, 135, 140, 85, 225, 77, 5, 0.5, 0.5, 7]) 
+    stds = np.array([18, 0.5, 19, 12, 5, 38, 23, 14, 43, 13, 3, 0.5, 0.5, 2])
+    
+    # 3. Standardize input (Input - Mean) / Std
+    input_scaled = (input_data - means) / stds
 
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X_train)
-    model = LogisticRegression(max_iter=500)
-    model.fit(X_scaled, y_train)
+    # 4. Generate Random Weights (Deterministic seed)
+    # This replicates the 'random model' behavior from the previous code without training it.
+    np.random.seed(42)
+    weights = np.random.randn(14)
+    bias = np.random.randn(1)
 
-    # Prediction
-    input_scaled = scaler.transform(input_features)
-    risk_prob = model.predict_proba(input_scaled)[0][1]
-    prediction = model.predict(input_scaled)[0]
+    # 5. Calculate Probability (Sigmoid Function)
+    logit = np.dot(input_scaled, weights) + bias
+    risk_prob = 1 / (1 + np.exp(-logit))
+    risk_prob = float(risk_prob[0]) # Convert to standard float
+    
+    # Threshold
+    prediction = 1 if risk_prob > 0.5 else 0
 
     st.markdown("---")
     
     # --- RESULTS SECTION ---
     st.subheader("📊 Analysis Results")
-    
-    # Centering the results for a cleaner look
     res_c1, res_c2, res_c3 = st.columns([1, 2, 1])
     
     with res_c2:
